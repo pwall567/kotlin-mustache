@@ -1,3 +1,28 @@
+/*
+ * @(#) Template.kt
+ *
+ * kotlin-mustache Minimal Kotlin implementation of Mustache templates
+ * Copyright (c) 2020 Peter Wall
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package net.pwall.mustache
 
 import java.io.File
@@ -48,38 +73,12 @@ class Template(private val elements: List<Element>) {
 
     class Section(private val name: String, private val children: List<Element>) : Element {
 
-        private fun iterate(appendable: Appendable, context: Context, iterator: Iterator<*>) {
-            var index = 0
-            while (iterator.hasNext()) {
-                val item = iterator.next()
-                val iteratorContext = context.iteratorChild(item, index == 0, !iterator.hasNext(), index, index + 1)
-                children.forEach { child -> child.appendTo(appendable, iteratorContext) }
-                index++
-            }
-        }
-
         override fun appendTo(appendable: Appendable, context: Context) {
             context.resolve(name)?.let {
                 when (it) {
-                    is Iterable<*> -> {
-                        iterate(appendable, context, it.iterator())
-//                        it.forEach { entry ->
-//                            val childContext = context.child(entry)
-//                            children.forEach { child -> child.appendTo(appendable, childContext) }
-//                        }
-                    }
-                    is Array<*> -> {
-                        it.forEach { entry ->
-                            val childContext = context.child(entry)
-                            children.forEach { child -> child.appendTo(appendable, childContext) }
-                        }
-                    }
-                    is Map<*, *> -> {
-                        it.entries.forEach { entry ->
-                            val childContext = context.child(entry)
-                            children.forEach { child -> child.appendTo(appendable, childContext) }
-                        }
-                    }
+                    is Iterable<*> -> iterate(appendable, context, it.iterator())
+                    is Array<*> -> iterate(appendable, context, it.iterator())
+                    is Map<*, *> -> iterate(appendable, context, it.entries.iterator())
                     is CharSequence -> {
                         if (it.isNotEmpty())
                             children.forEach { child -> child.appendTo(appendable, context) }
@@ -109,6 +108,16 @@ class Template(private val elements: List<Element>) {
                         children.forEach { child -> child.appendTo(appendable, childContext) }
                     }
                 }
+            }
+        }
+
+        private fun iterate(appendable: Appendable, context: Context, iterator: Iterator<*>) {
+            var index = 0
+            while (iterator.hasNext()) {
+                val item = iterator.next()
+                val iteratorContext = context.iteratorChild(item, index == 0, !iterator.hasNext(), index, index + 1)
+                children.forEach { child -> child.appendTo(appendable, iteratorContext) }
+                index++
             }
         }
 

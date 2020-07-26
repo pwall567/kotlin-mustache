@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.pwall.mustache</groupId>
     <artifactId>kotlin-mustache</artifactId>
-    <version>0.1</version>
-    <name>Kotlin implementation of JSON Schema</name>
+    <version>0.2</version>
+    <name>Minimal Kotlin implementation of Mustache templates</name>
     <packaging>jar</packaging>
     <url>https://github.com/pwall567/kotlin-mustache</url>
 
