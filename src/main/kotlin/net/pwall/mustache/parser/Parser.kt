@@ -87,6 +87,7 @@ class Parser {
                     val partial = getPartial(name)
                     elements.add(Template.Partial(partial))
                 }
+                tag.startsWith('!') -> {}
                 else -> elements.add(Template.Variable(tag))
             }
             sb.setLength(0)
