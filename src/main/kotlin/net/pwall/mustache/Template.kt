@@ -79,6 +79,10 @@ class Template(private val elements: List<Element>) {
                     is Iterable<*> -> iterate(appendable, context, it.iterator())
                     is Array<*> -> iterate(appendable, context, it.iterator())
                     is Map<*, *> -> iterate(appendable, context, it.entries.iterator())
+                    is Enum<*> -> {
+                        val childContext = context.enumChild(it)
+                        children.forEach { child -> child.appendTo(appendable, childContext) }
+                    }
                     is CharSequence -> {
                         if (it.isNotEmpty())
                             children.forEach { child -> child.appendTo(appendable, context) }

@@ -27,6 +27,7 @@ package net.pwall.mustache
 
 import kotlin.reflect.full.memberExtensionProperties
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.staticFunctions
 import kotlin.reflect.full.staticProperties
 
 open class Context private constructor(private val contextObject: Any?, private val parent: Context?) {
@@ -64,6 +65,19 @@ open class Context private constructor(private val contextObject: Any?, private 
                 "index1" -> index1
                 else -> super.resolve(name)
             }
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun enumChild(contextObject: Enum<*>) = object : Context(contextObject, this) {
+        val values = (contextObject::class.staticFunctions.find { it.name == "values" }?.call() as? Array<Enum<*>>?)?.
+                map { it.name }
+        override fun resolve(name: String): Any? {
+            if (contextObject.name == name)
+                return true
+            if (values != null && name in values)
+                return false
+            return super.resolve(name)
         }
     }
 

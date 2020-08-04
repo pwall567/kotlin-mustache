@@ -2,6 +2,10 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [0.4] - 2020-08-04
+### Added
+- added ability to use `enum` values as sections
+
 ## [0.3] - 2020-07-26
 ### Added
 - added comment tag

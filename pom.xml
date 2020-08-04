@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.pwall.mustache</groupId>
     <artifactId>kotlin-mustache</artifactId>
-    <version>0.3</version>
+    <version>0.4</version>
     <name>Minimal Kotlin implementation of Mustache templates</name>
     <packaging>jar</packaging>
     <url>https://github.com/pwall567/kotlin-mustache</url>

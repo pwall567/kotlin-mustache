@@ -86,4 +86,18 @@ class TemplateParserTest {
         expect("abc,\ndef,\nghi\n\n") { template.processToString(data) }
     }
 
+    @Test fun `should output section conditionally depending on enum`() {
+        val template = Template.parse(StringReader("data: {{#eee}}{{#A}}Q{{/A}}{{#B}}R{{/B}}{{#C}}S{{/C}}{{/eee}}"))
+        val data = mapOf("eee" to TestEnum.A)
+        expect("data: Q") { template.processToString(data) }
+    }
+
+    @Test fun `should output inverted section conditionally depending on enum`() {
+        val template = Template.parse(StringReader("data: {{#eee}}{{^A}}Q{{/A}}{{^B}}R{{/B}}{{^C}}S{{/C}}{{/eee}}"))
+        val data = mapOf("eee" to TestEnum.A)
+        expect("data: RS") { template.processToString(data) }
+    }
+
+    enum class TestEnum { A, B, C }
+
 }
