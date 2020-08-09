@@ -1,7 +1,7 @@
 /*
  * @(#) ParserTest.kt
  *
- * kotlin-mustache Minimal Kotlin implementation of Mustache templates
+ * kotlin-mustache  Kotlin implementation of Mustache templates
  * Copyright (c) 2020 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,23 +36,30 @@ class ParserTest {
 
     @Test fun `should read entire string when delimiter not present`() {
         val reader = StringReader("ABCD")
-        val stringBuffer = StringBuilder()
-        expect(false) {reader.readUntilDelimiter("//", stringBuffer)}
-        expect("ABCD") { stringBuffer.toString() }
+        val stringBuilder = StringBuilder()
+        expect(false) { reader.readUntilDelimiter("//", stringBuilder) }
+        expect("ABCD") { stringBuilder.toString() }
     }
 
     @Test fun `should read until delimiter`() {
         val reader = StringReader("ABCD//EFG")
-        val stringBuffer = StringBuilder()
-        expect(true) {reader.readUntilDelimiter("//", stringBuffer)}
-        expect("ABCD") { stringBuffer.toString() }
+        val stringBuilder = StringBuilder()
+        expect(true) { reader.readUntilDelimiter("//", stringBuilder) }
+        expect("ABCD") { stringBuilder.toString() }
+    }
+
+    @Test fun `should read until complex delimiter`() {
+        val reader = StringReader("ABCDqrstuvEFG")
+        val stringBuilder = StringBuilder()
+        expect(true) { reader.readUntilDelimiter("qrstuv", stringBuilder) }
+        expect("ABCD") { stringBuilder.toString() }
     }
 
     @Test fun `should read until delimiter when partial delimiter present`() {
         val reader = StringReader("AB/CD//EFG")
-        val stringBuffer = StringBuilder()
-        expect(true) {reader.readUntilDelimiter("//", stringBuffer)}
-        expect("AB/CD") { stringBuffer.toString() }
+        val stringBuilder = StringBuilder()
+        expect(true) { reader.readUntilDelimiter("//", stringBuilder) }
+        expect("AB/CD") { stringBuilder.toString() }
     }
 
 }

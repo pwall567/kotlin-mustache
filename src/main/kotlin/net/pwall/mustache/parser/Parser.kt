@@ -1,7 +1,7 @@
 /*
  * @(#) Parser.kt
  *
- * kotlin-mustache Minimal Kotlin implementation of Mustache templates
+ * kotlin-mustache  Kotlin implementation of Mustache templates
  * Copyright (c) 2020 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,108 +29,152 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
 import java.io.Reader
-import java.lang.Appendable
 
 import net.pwall.mustache.Template
 
 class Parser {
 
-    private val openDelimiter = "{{"
-    private val closeDelimiter = "}}"
+    private var openDelimiter = "{{"
+    private var closeDelimiter = "}}"
 
     var directory = File(".")
     var extension = "mustache"
 
     var resolvePartial: (String) -> Reader = { name -> File(directory, "$name.$extension").reader() }
 
-    private val partialCache = mutableMapOf<String, Template>()
+    private val partialCache = mutableMapOf<String, Template.Partial>()
 
     fun parse(file: File): Template {
         directory = file.parentFile
+        extension = file.extension
         return parse(file.inputStream())
     }
 
     fun parse(inputStream: InputStream): Template = parse(inputStream.reader())
 
-    fun parse(reader: Reader) = Template(parseNested(if (reader is BufferedReader) reader else reader.buffered()))
-
-    private fun parseNested(reader: Reader, stopper: String? = null): List<Template.Element> {
-        val elements = mutableListOf<Template.Element>()
-        val sb = StringBuilder()
-        while (reader.readUntilDelimiter(openDelimiter, sb)) {
-            if (sb.isNotEmpty())
-                elements.add(Template.TextElement(sb.toString()))
-            sb.setLength(0)
-            if (!reader.readUntilDelimiter(closeDelimiter, sb))
-                throw MustacheParserException("Unclosed tag at end of document")
-            val tag = sb.toString().trim()
-            when {
-                tag.startsWith('{') && tag.endsWith('}') ->
-                    elements.add(Template.LiteralVariable(tag.substring(1, tag.length - 1).trim()))
-                tag.startsWith('&') -> elements.add(Template.LiteralVariable(tag.substring(1).trim()))
-                tag.startsWith('#') -> {
-                    val section = tag.substring(1).trim()
-                    elements.add((Template.Section(section, parseNested(reader, section))))
-                }
-                tag.startsWith('^') -> {
-                    val section = tag.substring(1).trim()
-                    elements.add((Template.InvertedSection(section, parseNested(reader, section))))
-                }
-                tag.startsWith('/') -> {
-                    val section = tag.substring(1).trim()
-                    if (section != stopper)
-                        throw MustacheParserException("Unmatched section close tag - $section")
-                    return elements
-                }
-                tag.startsWith('>') -> {
-                    val name = tag.substring(1).trim()
-                    val partial = getPartial(name)
-                    elements.add(Template.Partial(partial))
-                }
-                tag.startsWith('!') -> {}
-                else -> elements.add(Template.Variable(tag))
-            }
-            sb.setLength(0)
-        }
-        if (stopper != null)
-            throw MustacheParserException("Unclosed section at end of document")
-        if (sb.isNotEmpty())
-            elements.add(Template.TextElement(sb.toString()))
-        return elements
+    fun parse(reader: Reader): Template {
+        openDelimiter = defaultOpenDelimiter
+        closeDelimiter = defaultCloseDelimiter
+        return Template(parseNested(if (reader is BufferedReader) reader else reader.buffered()))
     }
 
-    private fun getPartial(name: String): Template {
+    private fun parseNested(reader: Reader, stopper: String? = null): List<Template.Element> {
+        val saveOpenDelimiter = openDelimiter
+        val saveCloseDelimiter = closeDelimiter
+        try {
+            val elements = mutableListOf<Template.Element>()
+            val sb = StringBuilder()
+            while (reader.readUntilDelimiter(openDelimiter, sb)) {
+                if (sb.isNotEmpty())
+                    elements.add(Template.TextElement(sb.toString()))
+                sb.setLength(0)
+                reader.read().let {
+                    when {
+                        it < 0 -> throw MustacheParserException("Unclosed tag at end of document")
+                        it == '{'.toInt() -> {
+                            if (!reader.readUntilDelimiter("}$closeDelimiter", sb))
+                                throw MustacheParserException("Unclosed literal tag at end of document")
+                            val tag = sb.toString().trim()
+                            if (tag.isEmpty())
+                                throw MustacheParserException("Illegal empty literal tag")
+                            elements.add(Template.LiteralVariable(tag))
+                        }
+                        else -> {
+                            sb.append(it.toChar())
+                            if (!reader.readUntilDelimiter(closeDelimiter, sb))
+                                throw MustacheParserException("Unclosed tag at end of document")
+                            val tag = sb.toString().trim()
+                            if (tag.isEmpty())
+                                throw MustacheParserException("Illegal empty tag")
+                            when (tag[0]) {
+                                '&' -> elements.add(Template.LiteralVariable(tag.substring(1).trim()))
+                                '#' -> {
+                                    val section = tag.substring(1).trim()
+                                    elements.add((Template.Section(section, parseNested(reader, section))))
+                                }
+                                '^' -> {
+                                    val section = tag.substring(1).trim()
+                                    elements.add((Template.InvertedSection(section, parseNested(reader, section))))
+                                }
+                                '/' -> {
+                                    val section = tag.substring(1).trim()
+                                    if (section != stopper)
+                                        throw MustacheParserException("Unmatched section close tag - $section")
+                                    return elements
+                                }
+                                '>' -> {
+                                    val name = tag.substring(1).trim()
+                                    val partial = getPartial(name)
+                                    elements.add(partial)
+                                }
+                                '=' -> setDelimiters(tag)
+                                '!' -> {}
+                                else -> elements.add(Template.Variable(tag))
+                            }
+                        }
+                    }
+                }
+                sb.setLength(0)
+            }
+            if (stopper != null)
+                throw MustacheParserException("Unclosed section at end of document")
+            if (sb.isNotEmpty())
+                elements.add(Template.TextElement(sb.toString()))
+            return elements
+        }
+        finally {
+            openDelimiter = saveOpenDelimiter
+            closeDelimiter = saveCloseDelimiter
+        }
+    }
+
+    private fun setDelimiters(tag: String) {
+        if (tag.endsWith('=') && tag.contains(' ')) {
+            val strippedTag = tag.substring(1, tag.length - 1).trim()
+            openDelimiter = strippedTag.substringBefore(' ')
+            closeDelimiter = strippedTag.substringAfter(' ').trim()
+            if (openDelimiter.isNotEmpty() && closeDelimiter.isNotEmpty())
+                return
+        }
+        throw MustacheParserException("Incorrect delimiter tag")
+    }
+
+    private fun getPartial(name: String): Template.Partial {
         partialCache[name]?.let { return it }
-        val template = parse(resolvePartial(name))
-        partialCache[name] = template
-        return template
+        return Template.Partial().also {
+            partialCache[name] = it
+            it.template = parse(resolvePartial(name))
+        }
     }
 
     companion object {
 
-        fun Reader.readUntilDelimiter(delimiter: String, appendable: Appendable): Boolean {
-            val stopper = delimiter[0]
-            outerLoop@ while (true) {
-                var ch = read()
+        const val defaultOpenDelimiter = "{{"
+        const val defaultCloseDelimiter = "}}"
+
+        fun Reader.readUntilDelimiter(delimiter: String, sb: StringBuilder): Boolean {
+            val n = delimiter.length - 1
+            val stopper = delimiter.last().toInt()
+            while (true) {
+                val ch = read()
                 if (ch < 0)
                     return false
-                if (ch.toChar() == stopper) {
-                    for (i in 1 until delimiter.length) {
-                        ch = read()
-                        if (ch < 0) {
-                            appendable.append(delimiter.subSequence(0, i))
-                            return false
-                        }
-                        if (ch.toChar() != delimiter[i]) {
-                            appendable.append(delimiter.subSequence(0, i))
-                            appendable.append(ch.toChar())
-                            continue@outerLoop
-                        }
-                    }
+                if (ch == stopper && sb.length >= n && delimiterMatches(delimiter, sb)) {
+                    sb.setLength(sb.length - n)
                     return true
                 }
-                appendable.append(ch.toChar())
+                sb.append(ch.toChar())
             }
+        }
+
+        private fun delimiterMatches(delimiter: String, sb: StringBuilder): Boolean {
+            var i = delimiter.length - 1
+            var j = sb.length
+            while (i > 0) {
+                if (delimiter[--i] != sb[--j])
+                    return false
+            }
+            return true
         }
 
     }

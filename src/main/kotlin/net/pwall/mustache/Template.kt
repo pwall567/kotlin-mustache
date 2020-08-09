@@ -1,7 +1,7 @@
 /*
  * @(#) Template.kt
  *
- * kotlin-mustache Minimal Kotlin implementation of Mustache templates
+ * kotlin-mustache  Kotlin implementation of Mustache templates
  * Copyright (c) 2020 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,6 +28,8 @@ package net.pwall.mustache
 import java.io.File
 import java.io.InputStream
 import java.io.Reader
+import java.math.BigDecimal
+import java.math.BigInteger
 
 import net.pwall.html.HTML
 import net.pwall.mustache.parser.Parser
@@ -39,7 +41,10 @@ class Template(private val elements: List<Element>) {
     }.toString()
 
     fun processTo(appendable: Appendable, contextObject: Any?) {
-        val context = Context(contextObject)
+        appendTo(appendable, Context(contextObject))
+    }
+
+    fun appendTo(appendable: Appendable, context: Context) {
         elements.forEach { it.appendTo(appendable, context) }
     }
 
@@ -71,46 +76,69 @@ class Template(private val elements: List<Element>) {
 
     }
 
-    class Section(private val name: String, private val children: List<Element>) : Element {
+    abstract class ElementWithChildren(private val children: List<Element>) : Element {
+
+        fun appendChildren(appendable: Appendable, context: Context) {
+            children.forEach { child -> child.appendTo(appendable, context) }
+        }
+
+    }
+
+    class Section(private val name: String, children: List<Element>) : ElementWithChildren(children) {
 
         override fun appendTo(appendable: Appendable, context: Context) {
-            context.resolve(name)?.let {
-                when (it) {
-                    is Iterable<*> -> iterate(appendable, context, it.iterator())
-                    is Array<*> -> iterate(appendable, context, it.iterator())
-                    is Map<*, *> -> iterate(appendable, context, it.entries.iterator())
-                    is Enum<*> -> {
-                        val childContext = context.enumChild(it)
-                        children.forEach { child -> child.appendTo(appendable, childContext) }
-                    }
-                    is CharSequence -> {
-                        if (it.isNotEmpty())
-                            children.forEach { child -> child.appendTo(appendable, context) }
-                    }
-                    is Boolean -> {
-                        if (it)
-                            children.forEach { child -> child.appendTo(appendable, context) }
-                    }
-                    is Int -> {
-                        if (it != 0)
-                            children.forEach { child -> child.appendTo(appendable, context) }
-                    }
-                    is Long -> {
-                        if (it != 0)
-                            children.forEach { child -> child.appendTo(appendable, context) }
-                    }
-                    is Short -> {
-                        if (it != 0)
-                            children.forEach { child -> child.appendTo(appendable, context) }
-                    }
-                    is Byte -> {
-                        if (it != 0)
-                            children.forEach { child -> child.appendTo(appendable, context) }
-                    }
-                    else -> { // any other types? callable?
-                        val childContext = context.child(it)
-                        children.forEach { child -> child.appendTo(appendable, childContext) }
-                    }
+            useValue(context.resolve(name), appendable, context)
+        }
+
+        private fun useValue(value: Any?, appendable: Appendable, context: Context) {
+            when (value) {
+                null -> {}
+                is Iterable<*> -> iterate(appendable, context, value.iterator())
+                is Array<*> -> iterate(appendable, context, value.iterator())
+                is Map<*, *> -> iterate(appendable, context, value.entries.iterator())
+                is Enum<*> -> appendChildren(appendable, context.enumChild(value))
+                is CharSequence -> {
+                    if (value.isNotEmpty())
+                        appendChildren(appendable, context.child(value))
+                }
+                is Boolean -> {
+                    if (value)
+                        appendChildren(appendable, context.child(value))
+                }
+                is Int -> {
+                    if (value != 0)
+                        appendChildren(appendable, context.child(value))
+                }
+                is Long -> {
+                    if (value != 0L)
+                        appendChildren(appendable, context.child(value))
+                }
+                is Short -> {
+                    if (value != 0)
+                        appendChildren(appendable, context.child(value))
+                }
+                is Byte -> {
+                    if (value != 0)
+                        appendChildren(appendable, context.child(value))
+                }
+                is Double -> {
+                    if (value != 0.0)
+                        appendChildren(appendable, context.child(value))
+                }
+                is Float -> {
+                    if (value != 0.0F)
+                        appendChildren(appendable, context.child(value))
+                }
+                is BigInteger -> {
+                    if (value != BigInteger.ZERO)
+                        appendChildren(appendable, context.child(value))
+                }
+                is BigDecimal -> {
+                    if (value != BigDecimal.ZERO)
+                        appendChildren(appendable, context.child(value))
+                }
+                else -> { // any other types? callable?
+                    appendChildren(appendable, context.child(value))
                 }
             }
         }
@@ -120,60 +148,60 @@ class Template(private val elements: List<Element>) {
             while (iterator.hasNext()) {
                 val item = iterator.next()
                 val iteratorContext = context.iteratorChild(item, index == 0, !iterator.hasNext(), index, index + 1)
-                children.forEach { child -> child.appendTo(appendable, iteratorContext) }
+                appendChildren(appendable, iteratorContext)
                 index++
             }
         }
 
     }
 
-    class InvertedSection(private val name: String, private val children: List<Element>) : Element {
+    class InvertedSection(private val name: String, children: List<Element>) : ElementWithChildren(children) {
 
         override fun appendTo(appendable: Appendable, context: Context) {
             context.resolve(name).let {
                 when (it) {
                     null -> {
-                        children.forEach { child -> child.appendTo(appendable, context) }
+                        appendChildren(appendable, context)
                     }
                     is List<*> -> {
                         if (it.isEmpty())
-                            children.forEach { child -> child.appendTo(appendable, context) }
+                            appendChildren(appendable, context)
                     }
                     is Iterable<*> -> {
                         if (!it.iterator().hasNext())
-                            children.forEach { child -> child.appendTo(appendable, context) }
+                            appendChildren(appendable, context)
                     }
                     is Array<*> -> {
                         if (it.isEmpty())
-                            children.forEach { child -> child.appendTo(appendable, context) }
+                            appendChildren(appendable, context)
                     }
                     is Map<*, *> -> {
                         if (it.isEmpty())
-                            children.forEach { child -> child.appendTo(appendable, context) }
+                            appendChildren(appendable, context)
                     }
                     is CharSequence -> {
                         if (it.isEmpty())
-                            children.forEach { child -> child.appendTo(appendable, context) }
+                            appendChildren(appendable, context)
                     }
                     is Boolean -> {
                         if (!it)
-                            children.forEach { child -> child.appendTo(appendable, context) }
+                            appendChildren(appendable, context)
                     }
                     is Int -> {
                         if (it == 0)
-                            children.forEach { child -> child.appendTo(appendable, context) }
+                            appendChildren(appendable, context)
                     }
                     is Long -> {
                         if (it == 0)
-                            children.forEach { child -> child.appendTo(appendable, context) }
+                            appendChildren(appendable, context)
                     }
                     is Short -> {
                         if (it == 0)
-                            children.forEach { child -> child.appendTo(appendable, context) }
+                            appendChildren(appendable, context)
                     }
                     is Byte -> {
                         if (it == 0)
-                            children.forEach { child -> child.appendTo(appendable, context) }
+                            appendChildren(appendable, context)
                     }
                 }
             }
@@ -181,10 +209,12 @@ class Template(private val elements: List<Element>) {
 
     }
 
-    class Partial(private val template: Template) : Element {
+    class Partial : Element {
+
+        internal lateinit var template: Template
 
         override fun appendTo(appendable: Appendable, context: Context) {
-            template.elements.forEach { it.appendTo(appendable, context) }
+            template.appendTo(appendable, context)
         }
 
     }

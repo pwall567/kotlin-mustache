@@ -1,7 +1,7 @@
 /*
  * @(#) MustacheParserException.kt
  *
- * kotlin-mustache Minimal Kotlin implementation of Mustache templates
+ * kotlin-mustache  Kotlin implementation of Mustache templates
  * Copyright (c) 2020 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy

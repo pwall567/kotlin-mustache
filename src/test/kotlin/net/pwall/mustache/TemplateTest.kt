@@ -1,7 +1,7 @@
 /*
  * @(#) TemplateTest.kt
  *
- * kotlin-mustache Minimal Kotlin implementation of Mustache templates
+ * kotlin-mustache  Kotlin implementation of Mustache templates
  * Copyright (c) 2020 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -64,6 +64,13 @@ class TemplateTest {
         val template = Template(listOf(Template.TextElement("data: "), section))
         val data = mapOf("items" to listOf(TestClass("world", ""), TestClass("moon", "")))
         expect("data: hello, world;hello, moon;") { template.processToString(data) }
+    }
+
+    @Test fun `should output to Appendable`() {
+        val template = Template(listOf(Template.TextElement("hello")))
+        val stringBuilder = StringBuilder()
+        template.processTo(stringBuilder, null)
+        expect("hello") { stringBuilder.toString() }
     }
 
 }

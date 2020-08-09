@@ -1,7 +1,7 @@
 /*
  * @(#) TemplateParserTest.kt
  *
- * kotlin-mustache Minimal Kotlin implementation of Mustache templates
+ * kotlin-mustache  Kotlin implementation of Mustache templates
  * Copyright (c) 2020 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,8 +28,11 @@ package net.pwall.mustache
 import kotlin.test.Test
 import kotlin.test.expect
 
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.StringReader
+
+import net.pwall.mustache.parser.Parser
 
 class TemplateParserTest {
 
@@ -61,6 +64,12 @@ class TemplateParserTest {
         expect("hello, <world>") { template.processToString(data) }
     }
 
+    @Test fun `should output literal variables unescaped using alternative syntax`() {
+        val template = Template.parse(StringReader("hello, {{{aaa}}}!"))
+        val data = TestClass("<world>", "")
+        expect("hello, <world>!") { template.processToString(data) }
+    }
+
     @Test fun `should output section for each member of list`() {
         val template = Template.parse(StringReader("data: {{#items}}hello, {{aaa}};{{/items}}"))
         val data = mapOf("items" to listOf(TestClass("world", ""), TestClass("moon", "")))
@@ -71,6 +80,12 @@ class TemplateParserTest {
         val template = Template.parse(StringReader("data: {{#items}}hello, {{.}};{{/items}}"))
         val data = mapOf("items" to listOf("world", "moon"))
         expect("data: hello, world;hello, moon;") { template.processToString(data) }
+    }
+
+    @Test fun `should output section for each member of nested list`() {
+        val template = Template.parse(StringReader("data: {{#items}}{{#.}}hello, {{.}};{{/.}}{{/items}}"))
+        val data = mapOf("items" to listOf(listOf("world", "moon"), listOf("venus", "mars")))
+        expect("data: hello, world;hello, moon;hello, venus;hello, mars;") { template.processToString(data) }
     }
 
     @Test fun `should output section with iterable variables`() {
@@ -86,17 +101,58 @@ class TemplateParserTest {
         expect("abc,\ndef,\nghi\n\n") { template.processToString(data) }
     }
 
+    @Test fun `should locate partial using supplied directory and extension`() {
+        val parser = Parser()
+        parser.directory = File("src/test/resources")
+        parser.extension = "hbs"
+        val template = parser.parse(StringReader("{{#list}}{{>list_item}}{{/list}}"))
+        val data = mapOf("list" to listOf("abc", "def", "ghi"))
+        expect("abc,\ndef,\nghi\n") { template.processToString(data) }
+    }
+
     @Test fun `should output section conditionally depending on enum`() {
         val template = Template.parse(StringReader("data: {{#eee}}{{#A}}Q{{/A}}{{#B}}R{{/B}}{{#C}}S{{/C}}{{/eee}}"))
-        val data = mapOf("eee" to TestEnum.A)
-        expect("data: Q") { template.processToString(data) }
+        expect("data: Q") { template.processToString(mapOf("eee" to TestEnum.A)) }
+        expect("data: R") { template.processToString(mapOf("eee" to TestEnum.B)) }
+        expect("data: S") { template.processToString(mapOf("eee" to TestEnum.C)) }
     }
 
     @Test fun `should output inverted section conditionally depending on enum`() {
         val template = Template.parse(StringReader("data: {{#eee}}{{^A}}Q{{/A}}{{^B}}R{{/B}}{{^C}}S{{/C}}{{/eee}}"))
-        val data = mapOf("eee" to TestEnum.A)
-        expect("data: RS") { template.processToString(data) }
+        expect("data: RS") { template.processToString(mapOf("eee" to TestEnum.A)) }
+        expect("data: QS") { template.processToString(mapOf("eee" to TestEnum.B)) }
+        expect("data: QR") { template.processToString(mapOf("eee" to TestEnum.C)) }
     }
+
+    @Test fun `should use recursive partial`() {
+        val template = Template.parse(File("src/test/resources/recursive.mustache"))
+        val recursive1 = Recursive("abc", emptyList())
+        val recursive2 = Recursive("def", listOf(recursive1))
+        expect("(abc)(def)") { template.processToString(recursive2) }
+        val recursive3 = Recursive("ghi", listOf(recursive1, recursive2))
+        expect("(abc)(abc)(def)(ghi)") { template.processToString(recursive3) }
+    }
+
+    @Test fun `should use shared instance of parser`() {
+        val parser = Template.parser
+        val template = parser.parse(StringReader("hello"))
+        expect("hello") { template.processToString(null) }
+    }
+
+    @Test fun `should read InputStream`() {
+        val templateText = """aaa="{{&aaa}}", bbb="{{&bbb}}""""
+        val bais = ByteArrayInputStream(templateText.toByteArray())
+        val template = Template.parse(bais)
+        expect("""aaa="Hello", bbb="World"""") { template.processToString(TestClass("Hello", "World")) }
+    }
+
+    @Test fun `should accept custom delimiters`() {
+        val template = Template.parse(StringReader("{{aaa}}, {{=<% %>=}}<%bbb%>"))
+        val data = TestClass("Hello", "World")
+        expect("Hello, World") { template.processToString(data) }
+    }
+
+    data class Recursive(val text: String, val list: List<Recursive>)
 
     enum class TestEnum { A, B, C }
 

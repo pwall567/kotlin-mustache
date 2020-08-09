@@ -1,7 +1,7 @@
 /*
  * @(#) TestClass.kt
  *
- * kotlin-mustache Minimal Kotlin implementation of Mustache templates
+ * kotlin-mustache  Kotlin implementation of Mustache templates
  * Copyright (c) 2020 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,4 +25,8 @@
 
 package net.pwall.mustache
 
-data class TestClass(val aaa: String, val bbb: String)
+data class TestClass(val aaa: String, val bbb: String) {
+    val bbbLength: Int
+        get() = bbb.length
+
+}
