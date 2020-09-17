@@ -2,6 +2,10 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [0.6] - 2020-09-17
+### Changed
+- switched to Kotlin 1.4.0
+
 ## [0.5] - 2020-08-09
 ### Added
 - added ability to set delimiters

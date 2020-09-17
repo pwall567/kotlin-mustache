@@ -94,7 +94,7 @@ object for the nested content (this is how properties of nested objects may be a
 An inverted section is a block of text to be processed once, if the value is null or the following:
 
 - `Iterable` (`List` etc.), `Array`, `Map`: if the collection or map is empty
-- `Enum` values: if the enum to not have the specified value
+- `Enum` values: if the enum does not have the specified value
 - `String` etc.: if the string is empty
 - number types: if the number is non-zero
 - `Boolean`: if the value is `false`
@@ -116,25 +116,25 @@ Recursive data structures may be processed by recursive templates.
 
 ## Dependency Specification
 
-The latest version of the library is 0.5, and it may be obtained from the Maven Central repository.
+The latest version of the library is 0.6, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
     <groupId>net.pwall.mustache</groupId>
     <artifactId>kotlin-mustache</artifactId>
-    <version>0.5</version>
+    <version>0.6</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    testImplementation 'net.pwall.mustache:kotlin-mustache:0.5'
+    testImplementation 'net.pwall.mustache:kotlin-mustache:0.6'
 ```
 ### Gradle (kts)
 ```kotlin
-    testImplementation("net.pwall.mustache:kotlin-mustache:0.5")
+    testImplementation("net.pwall.mustache:kotlin-mustache:0.6")
 ```
 
 Peter Wall
 
-2020-08-09
+2020-09-17
