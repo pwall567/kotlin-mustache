@@ -30,6 +30,7 @@ The simplest tag type is the variable, which is replaced in the output by the re
 context object.
 If the context object is a `Map`, the variable name is used as a key to locate an entry; otherwise the variable name is
 used to locate a property in the Kotlin object.
+See [Name Resolution](#name-resolution) below for more detail.
 
 For example, given the template:
 ```handlebars
@@ -73,7 +74,8 @@ Sections are introduced by a opening tag which has a `#` following the two left 
 following the left braces, for example `{{#person}}...{{/person}}`.
 Sections may be nested, and closing tags must match the most recent unmatched opening tag.
 
-The content of the section is processed conditionally, depending on the type of the value:
+The content of the section is processed conditionally, depending on the type of the value (the value is determined using
+[the rules detailed below](#name-resolution)):
 
 - `Iterable` (e.g. `List`), `Array`: the content of the section is processed for each entry in the collection, with the
 individual entry used as the context object for the nested content
@@ -105,7 +107,7 @@ Sections and inverted sections may nest within each other.
 
 #### Partials
 
-Partial is the term given to a nested section - for example a template in a separate file.
+"Partial" is the term given to a nested section - for example a template in a separate file.
 Partials are introduced by a tag with '>' following the two left braces - the remainder of the tag is the name of an
 external file.
 
@@ -114,27 +116,42 @@ extension for any partials encountered in that template.
 
 Recursive data structures may be processed by recursive templates.
 
+### Name Resolution
+
+The variable and section (including inverted section) tags use the following rules to determine the value to be used for
+the tag:
+- If the context object is `null`, the result value is `null`
+- If the context object is a `Map` containing a key with the tag name, the value associated with that key is used
+- If the context object has a property with the tag name, that property is used
+- If the current context is a nested context (part of a section or inverted section), the context object of the outer
+context is searched using these same rules (repeatedly up to the outermost context)
+- If nothing is found, `null` is returned
+
+The variable or section may be specified in a structured form, e.g. `person.firstName`.
+In this case, the above rules are used for the first part of the name (the part before the first dot), but for the
+subsequent parts only the current context is searched; the enclosing contexts do form part of the process.
+
 ## Dependency Specification
 
-The latest version of the library is 0.6, and it may be obtained from the Maven Central repository.
+The latest version of the library is 0.7, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
     <groupId>net.pwall.mustache</groupId>
     <artifactId>kotlin-mustache</artifactId>
-    <version>0.6</version>
+    <version>0.7</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    testImplementation 'net.pwall.mustache:kotlin-mustache:0.6'
+    testImplementation 'net.pwall.mustache:kotlin-mustache:0.7'
 ```
 ### Gradle (kts)
 ```kotlin
-    testImplementation("net.pwall.mustache:kotlin-mustache:0.6")
+    testImplementation("net.pwall.mustache:kotlin-mustache:0.7")
 ```
 
 Peter Wall
 
-2020-09-17
+2020-09-20

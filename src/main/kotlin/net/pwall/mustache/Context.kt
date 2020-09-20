@@ -35,22 +35,42 @@ open class Context private constructor(private val contextObject: Any?, private 
     constructor(contextObject: Any?) : this(contextObject, null)
 
     open fun resolve(name: String): Any? {
-        if (name == ".")
-            return contextObject
-        when (contextObject) {
+        return when {
+            name == "." -> contextObject
+            !name.contains('.') -> resolveName(contextObject, name) { parent?.resolve(name) }
+            else -> {
+                val outerName = name.substringBefore('.')
+                val outerObject = resolveName(contextObject, outerName) { parent?.resolve(outerName) }
+                nestedResolve(outerObject, name.substringAfter('.'))
+            }
+        }
+    }
+
+    private fun nestedResolve(sourceObject: Any?, name: String): Any? {
+        return when {
+            !name.contains('.') -> resolveName(sourceObject, name) { null }
+            else -> {
+                val outerObject = resolveName(sourceObject, name.substringBefore('.')) { null }
+                nestedResolve(outerObject, name.substringAfter('.'))
+            }
+        }
+    }
+
+    private fun resolveName(sourceObject: Any?, name: String, fallback: () -> Any?): Any? {
+        when (sourceObject) {
             null -> return null
             is Map<*, *> -> {
-                if (contextObject.containsKey(name))
-                    return contextObject[name]
+                if (sourceObject.containsKey(name))
+                    return sourceObject[name]
             }
             else -> {
-                val kClass = contextObject::class
-                kClass.memberProperties.find { it.name == name }?.let { return it.call(contextObject) }
-                kClass.memberExtensionProperties.find { it.name == name }?.let { return it.call(contextObject) }
+                val kClass = sourceObject::class
+                kClass.memberProperties.find { it.name == name }?.let { return it.call(sourceObject) }
+                kClass.memberExtensionProperties.find { it.name == name }?.let { return it.call(sourceObject) }
                 kClass.staticProperties.find { it.name == name }?.let { return it.call() }
             }
         }
-        return parent?.resolve(name)
+        return fallback()
     }
 
     fun child(contextObject: Any?) = Context(contextObject, this)

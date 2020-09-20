@@ -34,7 +34,7 @@ import java.math.BigInteger
 import net.pwall.html.HTML
 import net.pwall.mustache.parser.Parser
 
-class Template(private val elements: List<Element>) {
+class Template internal constructor(private val elements: List<Element>) {
 
     fun processToString(contextObject: Any?): String = StringBuilder().apply {
         processTo(this, contextObject)
@@ -227,9 +227,9 @@ class Template(private val elements: List<Element>) {
 
         fun parse(file: File) = parser.parse(file)
 
-        fun parse(inputStream: InputStream) = Parser().parse(inputStream)
+        fun parse(inputStream: InputStream) = parser.parse(inputStream)
 
-        fun parse(reader: Reader) = Parser().parse(reader)
+        fun parse(reader: Reader) = parser.parse(reader)
 
     }
 

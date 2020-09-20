@@ -2,6 +2,10 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [0.7] - 2020-09-20
+### Changed
+- allow structured names in tags (e.g. `{{&obj.field}}`)
+
 ## [0.6] - 2020-09-17
 ### Changed
 - switched to Kotlin 1.4.0

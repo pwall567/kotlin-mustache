@@ -152,6 +152,19 @@ class TemplateParserTest {
         expect("Hello, World") { template.processToString(data) }
     }
 
+    @Test fun `should find field using dot notation`() {
+        val template = Template.parse(StringReader("Hello {{&xxx.aaa}} (and {{xxx.bbb}})"))
+        val data = mapOf("xxx" to TestClass("World", "Moon"))
+        expect("Hello World (and Moon)") { template.processToString(data) }
+    }
+
+    @Test fun `should find field using multiple dot notation`() {
+        val template = Template.parse(StringReader("Hello {{&q.xxx.aaa}} (and {{q.xxx.bbb}})"))
+        val data1 = mapOf("xxx" to TestClass("World", "Moon"))
+        val data2 = mapOf("q" to data1)
+        expect("Hello World (and Moon)") { template.processToString(data2) }
+    }
+
     data class Recursive(val text: String, val list: List<Recursive>)
 
     enum class TestEnum { A, B, C }
