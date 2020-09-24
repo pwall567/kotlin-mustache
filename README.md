@@ -145,11 +145,11 @@ The latest version of the library is 0.7, and it may be obtained from the Maven 
 ```
 ### Gradle
 ```groovy
-    testImplementation 'net.pwall.mustache:kotlin-mustache:0.7'
+    implementation 'net.pwall.mustache:kotlin-mustache:0.7'
 ```
 ### Gradle (kts)
 ```kotlin
-    testImplementation("net.pwall.mustache:kotlin-mustache:0.7")
+    implementation("net.pwall.mustache:kotlin-mustache:0.7")
 ```
 
 Peter Wall
