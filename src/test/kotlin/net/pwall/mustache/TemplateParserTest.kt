@@ -110,6 +110,13 @@ class TemplateParserTest {
         expect("abc,\ndef,\nghi\n") { template.processToString(data) }
     }
 
+    @Test fun `should locate partial using custom resolver`() {
+        val parser = Parser { File("src/test/resources", "$it.hbs").reader() }
+        val template = parser.parse(StringReader("{{#list}}{{>list_item}}{{/list}}"))
+        val data = mapOf("list" to listOf("abc", "def", "ghi"))
+        expect("abc,\ndef,\nghi\n") { template.processToString(data) }
+    }
+
     @Test fun `should output section conditionally depending on enum`() {
         val template = Template.parse(StringReader("data: {{#eee}}{{#A}}Q{{/A}}{{#B}}R{{/B}}{{#C}}S{{/C}}{{/eee}}"))
         expect("data: Q") { template.processToString(mapOf("eee" to TestEnum.A)) }

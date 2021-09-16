@@ -32,15 +32,15 @@ import java.io.Reader
 
 import net.pwall.mustache.Template
 
-class Parser {
+class Parser(
+        var directory: File = File("."),
+        var extension: String = "mustache",
+        var resolvePartial: Parser.(String) -> Reader =
+                { name -> File(this.directory, "$name.${this.extension}").reader() }
+) {
 
     private var openDelimiter = "{{"
     private var closeDelimiter = "}}"
-
-    var directory = File(".")
-    var extension = "mustache"
-
-    var resolvePartial: (String) -> Reader = { name -> File(directory, "$name.$extension").reader() }
 
     private val partialCache = mutableMapOf<String, Template.Partial>()
 
@@ -139,9 +139,16 @@ class Parser {
         throw MustacheParserException("Incorrect delimiter tag")
     }
 
-    private fun getPartial(name: String): Template.Partial {
+    private fun getPartial2(name: String): Template.Partial {
         partialCache[name]?.let { return it }
         return Template.Partial().also {
+            partialCache[name] = it
+            it.template = parse(resolvePartial(name))
+        }
+    }
+
+    private fun getPartial(name: String): Template.Partial {
+        return partialCache[name] ?: Template.Partial().also {
             partialCache[name] = it
             it.template = parse(resolvePartial(name))
         }

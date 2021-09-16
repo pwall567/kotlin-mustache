@@ -2,6 +2,11 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [0.8] - 2021-09-16
+### Changed
+- `Parser`: allow parameterisation by constructor parameters
+- `README.md`: updated
+
 ## [0.7] - 2020-09-20
 ### Changed
 - allow structured names in tags (e.g. `{{&obj.field}}`)

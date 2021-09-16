@@ -25,8 +25,4 @@
 
 package net.pwall.mustache
 
-data class TestClass(val aaa: String, val bbb: String) {
-    val bbbLength: Int
-        get() = bbb.length
-
-}
+data class TestClass(val aaa: String, val bbb: String)
