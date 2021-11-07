@@ -71,7 +71,7 @@ class Parser(
                 reader.read().let {
                     when {
                         it < 0 -> throw MustacheParserException("Unclosed tag at end of document")
-                        it == '{'.toInt() -> {
+                        it == '{'.code -> {
                             if (!reader.readUntilDelimiter("}$closeDelimiter", sb))
                                 throw MustacheParserException("Unclosed literal tag at end of document")
                             val tag = sb.toString().trim()
@@ -161,7 +161,7 @@ class Parser(
 
         fun Reader.readUntilDelimiter(delimiter: String, sb: StringBuilder): Boolean {
             val n = delimiter.length - 1
-            val stopper = delimiter.last().toInt()
+            val stopper = delimiter.last().code
             while (true) {
                 val ch = read()
                 if (ch < 0)
