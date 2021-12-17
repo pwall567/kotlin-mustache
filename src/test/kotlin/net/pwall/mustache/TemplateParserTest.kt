@@ -153,6 +153,11 @@ class TemplateParserTest {
         expect("""aaa="Hello", bbb="World"""") { template.processToString(TestClass("Hello", "World")) }
     }
 
+    @Test fun `should read String`() {
+        val template = Template.parse("""aaa="{{&aaa}}", bbb="{{&bbb}}"""")
+        expect("""aaa="Hello", bbb="World"""") { template.processToString(TestClass("Hello", "World")) }
+    }
+
     @Test fun `should accept custom delimiters`() {
         val template = Template.parse(StringReader("{{aaa}}, {{=<% %>=}}<%bbb%>"))
         val data = TestClass("Hello", "World")

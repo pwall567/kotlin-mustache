@@ -25,10 +25,10 @@
 
 package net.pwall.mustache.parser
 
-import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
 import java.io.Reader
+import java.io.StringReader
 
 import net.pwall.mustache.Template
 
@@ -55,8 +55,10 @@ class Parser(
     fun parse(reader: Reader): Template {
         openDelimiter = defaultOpenDelimiter
         closeDelimiter = defaultCloseDelimiter
-        return Template(parseNested(if (reader is BufferedReader) reader else reader.buffered()))
+        return Template(parseNested(reader.buffered()))
     }
+
+    fun parse(string: String): Template = parse(StringReader(string))
 
     private fun parseNested(reader: Reader, stopper: String? = null): List<Template.Element> {
         val saveOpenDelimiter = openDelimiter
@@ -137,14 +139,6 @@ class Parser(
                 return
         }
         throw MustacheParserException("Incorrect delimiter tag")
-    }
-
-    private fun getPartial2(name: String): Template.Partial {
-        partialCache[name]?.let { return it }
-        return Template.Partial().also {
-            partialCache[name] = it
-            it.template = parse(resolvePartial(name))
-        }
     }
 
     private fun getPartial(name: String): Template.Partial {

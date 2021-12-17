@@ -231,6 +231,8 @@ class Template internal constructor(private val elements: List<Element>) {
 
         fun parse(reader: Reader) = parser.parse(reader)
 
+        fun parse(string: String) = parser.parse(string)
+
     }
 
 }

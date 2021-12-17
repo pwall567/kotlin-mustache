@@ -183,25 +183,25 @@ For example:
 
 ## Dependency Specification
 
-The latest version of the library is 0.9, and it may be obtained from the Maven Central repository.
+The latest version of the library is 0.10, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>net.pwall.mustache</groupId>
       <artifactId>kotlin-mustache</artifactId>
-      <version>0.9</version>
+      <version>0.10</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'net.pwall.mustache:kotlin-mustache:0.9'
+    implementation 'net.pwall.mustache:kotlin-mustache:0.10'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("net.pwall.mustache:kotlin-mustache:0.9")
+    implementation("net.pwall.mustache:kotlin-mustache:0.10")
 ```
 
 Peter Wall
 
-2020-11-07
+2021-12-17
