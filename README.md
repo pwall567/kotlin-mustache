@@ -178,7 +178,7 @@ For example:
     data class Transaction(val type: Type, val amount: Int)
 
     val template = Template.parse("{{#type}}{{#CREDIT}}+{{/CREDIT}}{{#DEBIT}}-{{/DEBIT}}{{/type}}{{&amount}}")
-    println(template.render(Transaction(Type.DEBIT, 100))) // will print -100
+    println(template.processToString(Transaction(Type.DEBIT, 100))) // will print -100
 ```
 
 ## Dependency Specification
