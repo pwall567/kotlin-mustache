@@ -233,6 +233,8 @@ class Template internal constructor(private val elements: List<Element>) {
 
         fun parse(string: String) = parser.parse(string)
 
+        fun clearPartials() = parser.clearPartials()
+
     }
 
 }

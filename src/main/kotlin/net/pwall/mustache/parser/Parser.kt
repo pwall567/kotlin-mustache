@@ -31,18 +31,26 @@ import java.io.Reader
 import java.io.StringReader
 
 import net.pwall.mustache.Template
+import java.io.FileNotFoundException
 
 class Parser(
         var directory: File = File("."),
         var extension: String = "mustache",
-        var resolvePartial: Parser.(String) -> Reader =
-                { name -> File(this.directory, "$name.${this.extension}").reader() }
+        var resolvePartial: Parser.(String) -> Reader = { name ->
+            try {
+                File(this.directory, "$name.${this.extension}").reader()
+            } catch (_: FileNotFoundException) {
+                StringReader("")
+            }
+        }
 ) {
 
     private var openDelimiter = "{{"
     private var closeDelimiter = "}}"
 
     private val partialCache = mutableMapOf<String, Template.Partial>()
+
+    fun clearPartials() = partialCache.clear()
 
     fun parse(file: File): Template {
         directory = file.parentFile
@@ -55,12 +63,12 @@ class Parser(
     fun parse(reader: Reader): Template {
         openDelimiter = defaultOpenDelimiter
         closeDelimiter = defaultCloseDelimiter
-        return Template(parseNested(reader.buffered()))
+        return Template(parseNested(MustacheReader(reader.buffered())))
     }
 
     fun parse(string: String): Template = parse(StringReader(string))
 
-    private fun parseNested(reader: Reader, stopper: String? = null): List<Template.Element> {
+    private fun parseNested(reader: MustacheReader, stopper: String? = null): List<Template.Element> {
         val saveOpenDelimiter = openDelimiter
         val saveCloseDelimiter = closeDelimiter
         try {
@@ -109,7 +117,10 @@ class Parser(
                                     val partial = getPartial(name)
                                     elements.add(partial)
                                 }
-                                '=' -> setDelimiters(tag)
+                                '=' -> {
+                                    setDelimiters(tag)
+                                    reader.setDelimiter(openDelimiter, closeDelimiter)
+                                }
                                 '!' -> {}
                                 else -> elements.add(Template.Variable(tag))
                             }
