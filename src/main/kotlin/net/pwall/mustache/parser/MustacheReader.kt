@@ -57,14 +57,9 @@ class MustacheReader(
         input.close()
     }
 
-    fun setDelimiter(sd: String, ed: String) {
-        tagRe = Regex("""\s*(${escape(sd)}$tagChar$tagContent${escape(ed)})\s*""")
+    fun setDelimiter(openDelimiter: String, closeDelimiter: String) {
+        tagRe = makeTagRe(openDelimiter, closeDelimiter)
     }
-
-    private fun escape(str: String) =
-        str.fold(StringBuilder()) { sb, c ->
-            sb.append(if (c in reSpecial) "\\$c" else c)
-        }.toString()
 
     private fun loadLineBuffer() {
         pos = 0
@@ -90,8 +85,19 @@ class MustacheReader(
 
         private const val reSpecial = "/.*+?|()[]{}\\"
         private const val tagChar = "[!#^/>=]"
-        private const val tagContent = "[^}]+(}[^}]+)*"
+        private const val tagContent = "(?:[^}]+}?)*"
+        private const val defaultOpenDelimiter = "{{"
+        private const val defaultCloseDelimiter = "}}"
 
-        private val DEFAULT_TAG_RE = Regex("""\s*(\{{2,3}$tagChar$tagContent}{2,3})\s*$""")
+        private fun escape(str: String) =
+            str.fold(StringBuilder()) { sb, c ->
+                sb.append(if (c in reSpecial) "\\$c" else c)
+            }.toString()
+
+        private fun makeTagRe(od: String, cd: String) =
+            Regex("""\s*(${escape(od)}$tagChar$tagContent${escape(cd)})\s*$""")
+
+        private val DEFAULT_TAG_RE =
+            makeTagRe(defaultOpenDelimiter, defaultCloseDelimiter)
     }
 }
