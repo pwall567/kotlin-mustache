@@ -1,5 +1,5 @@
 /*
- * @(#) TestClass.kt
+ * @(#) MustacheReaderTest.kt
  *
  * kotlin-mustache  Kotlin implementation of Mustache templates
  * Copyright (c) 2020 Peter Wall

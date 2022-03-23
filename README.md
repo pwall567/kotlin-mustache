@@ -161,7 +161,7 @@ subsequent parts only the result of the first part is searched and the enclosing
 
 ### Whitespace
 
-This implementation treats all whitespace as significant, and copies it to the output.
+Whitespace in lines that only contain a tag are ignored. All other whitespace are copied to the output.
 This includes the newline at the end of a file, so if, for example, you have a partial to substitute a word or phrase
 into the middle of a line, then to preserve line formatting the partial must not have a newline at the end of the file.
 

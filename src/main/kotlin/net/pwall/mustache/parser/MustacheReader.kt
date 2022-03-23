@@ -1,5 +1,5 @@
 /*
- * @(#) TestClass.kt
+ * @(#) MustacheReader.kt
  *
  * kotlin-mustache  Kotlin implementation of Mustache templates
  * Copyright (c) 2020 Peter Wall
@@ -28,7 +28,7 @@ package net.pwall.mustache.parser
 import java.io.Reader
 
 /**
- * A Reader that ignores whitespaces surrounding standalone tags.
+ * A Reader that ignores whitespace surrounding standalone tags.
  */
 class MustacheReader(
     val input: Reader,
