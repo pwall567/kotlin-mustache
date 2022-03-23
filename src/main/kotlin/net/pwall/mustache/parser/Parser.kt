@@ -55,12 +55,12 @@ class Parser(
     fun parse(reader: Reader): Template {
         openDelimiter = defaultOpenDelimiter
         closeDelimiter = defaultCloseDelimiter
-        return Template(parseNested(reader.buffered()))
+        return Template(parseNested(MustacheReader(reader.buffered())))
     }
 
     fun parse(string: String): Template = parse(StringReader(string))
 
-    private fun parseNested(reader: Reader, stopper: String? = null): List<Template.Element> {
+    private fun parseNested(reader: MustacheReader, stopper: String? = null): List<Template.Element> {
         val saveOpenDelimiter = openDelimiter
         val saveCloseDelimiter = closeDelimiter
         try {
@@ -109,7 +109,10 @@ class Parser(
                                     val partial = getPartial(name)
                                     elements.add(partial)
                                 }
-                                '=' -> setDelimiters(tag)
+                                '=' -> {
+                                    setDelimiters(tag)
+                                    reader.setDelimiter(openDelimiter, closeDelimiter)
+                                }
                                 '!' -> {}
                                 else -> elements.add(Template.Variable(tag))
                             }
