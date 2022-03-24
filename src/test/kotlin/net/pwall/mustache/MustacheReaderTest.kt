@@ -108,11 +108,18 @@ class MustacheReaderTest {
     }
 
     @Test
-    fun `reader accepts single closing curly brackets in comments`() {
+    fun `reader accepts single line comment`() {
         val text = "{{! xxx}yyy}zzz }}"
         val reader = MustacheReader(StringReader(text))
+        expect(-1) { reader.read(buffer, 0, 1024) }
+    }
+
+    @Test
+    fun `reader accepts multi line comment`() {
+        val text = " {{!\n xxx}\n yyy}\nzzz\n }} "
+        val reader = MustacheReader(StringReader(text))
         val len = reader.read(buffer, 0, 1024)
-        expect(text) { String(buffer, 0, len) }
+        expect("  ") { String(buffer, 0, len) }
     }
 
     @Test
