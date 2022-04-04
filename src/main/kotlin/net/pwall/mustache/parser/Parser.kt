@@ -144,7 +144,9 @@ class Parser(
     private fun getPartial(name: String): Template.Partial {
         return partialCache[name] ?: Template.Partial().also {
             partialCache[name] = it
-            it.template = parse(resolvePartial(name))
+            resolvePartial(name).use { reader ->
+                it.template = parse(reader)
+            }
         }
     }
 
