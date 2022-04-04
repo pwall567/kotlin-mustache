@@ -113,6 +113,7 @@ class Parser(
                                     setDelimiters(tag)
                                     reader.setDelimiter(openDelimiter, closeDelimiter)
                                 }
+                                '!' -> {}
                                 else -> elements.add(Template.Variable(tag))
                             }
                         }

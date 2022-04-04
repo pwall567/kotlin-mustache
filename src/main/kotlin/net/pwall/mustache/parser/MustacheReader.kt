@@ -41,7 +41,10 @@ class MustacheReader(
     private var pos = 0
     private var end = 0
     private var openDelimiter = defaultOpenDelimiter
+    private var openComment = "$openDelimiter!"
+    private var openCommentLength = openComment.length
     private var closeDelimiter = defaultCloseDelimiter
+    private var closeDelimiterLength = defaultCloseDelimiter.length
 
     override fun read(cbuf: CharArray, off: Int, len: Int): Int {
         var cnt = 0
@@ -62,7 +65,10 @@ class MustacheReader(
 
     fun setDelimiter(openDelimiter: String, closeDelimiter: String) {
         this.openDelimiter = openDelimiter
+        this.openComment = "$openDelimiter!"
+        this.openCommentLength = openComment.length
         this.closeDelimiter = closeDelimiter
+        this.closeDelimiterLength = closeDelimiter.length
     }
 
     private fun loadLineBuffer() {
@@ -72,20 +78,18 @@ class MustacheReader(
         do {
             val st = input.read(lineBuffer, end, 1)
             if (st == 1) {
-                if (!inComment && lineBuffer[end] == openDelimiter[0]) {
-                    // look ahead to see if incoming character starts a comment
-                    input.mark(openDelimiter.length)
-                    input.read(lineBuffer, end + 1, openDelimiter.length)
-                    inComment = String(lineBuffer, end, openDelimiter.length + 1) == "$openDelimiter!"
-                    if (!inComment) input.reset()
+                if (!inComment && end >= openCommentLength) {
+                    inComment = String(lineBuffer, end - openCommentLength, openCommentLength) == openComment
                 }
                 if (!inComment) {
-                    // last character is not part of a comment
+                    // last character is not body of a comment
                     end++
                 } else if (lineBuffer[end] == closeDelimiter[0]) {
-                    // check if reached end of comment
-                    input.read(lineBuffer, end + 1, closeDelimiter.length - 1)
-                    inComment = String(lineBuffer, end, openDelimiter.length) != closeDelimiter
+                    input.read(lineBuffer, end + 1, closeDelimiterLength - 1)
+                    inComment = String(lineBuffer, end, closeDelimiterLength) != closeDelimiter
+                    if (!inComment) {
+                        end += closeDelimiterLength
+                    }
                 }
             }
         } while (st != -1 && (end == 0 || lineBuffer[end - 1] != '\n') && end < maxLineSize)
@@ -107,7 +111,7 @@ class MustacheReader(
     companion object {
         const val DEFAULT_MAX_LINE_SIZE = 1024
 
-        private const val tagType = "[#^/>=]"
+        private const val tagType = "#^/>=!"
         private const val defaultOpenDelimiter = "{{"
         private const val defaultCloseDelimiter = "}}"
     }
