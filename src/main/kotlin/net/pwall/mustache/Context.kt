@@ -63,6 +63,10 @@ open class Context private constructor(private val contextObject: Any?, private 
                 if (sourceObject.containsKey(name))
                     return sourceObject[name]
             }
+            is Map.Entry<*, *> -> {
+                if (sourceObject.key == name)
+                    return sourceObject.value
+            }
             else -> {
                 val kClass = sourceObject::class
                 kClass.memberProperties.find { it.name == name }?.let { return it.call(sourceObject) }

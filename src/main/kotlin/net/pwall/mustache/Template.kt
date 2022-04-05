@@ -34,7 +34,7 @@ import java.math.BigInteger
 import net.pwall.html.HTML
 import net.pwall.mustache.parser.Parser
 
-class Template internal constructor(private val elements: List<Element>) {
+class Template internal constructor(var elements: List<Element>, val indent: String = "") {
 
     fun processToString(contextObject: Any?): String = StringBuilder().apply {
         processTo(this, contextObject)
@@ -45,11 +45,18 @@ class Template internal constructor(private val elements: List<Element>) {
     }
 
     fun appendTo(appendable: Appendable, context: Context) {
-        elements.forEach { it.appendTo(appendable, context) }
+        elements.forEachIndexed { idx, element ->
+            val startsLine = (idx == 0) || idx < (elements.size - 1) && elements[idx - 1].let {
+                it is TextElement && it.endsLine()
+            }
+            if (startsLine) appendable.append(indent)
+            element.indented(indent).appendTo(appendable, context)
+        }
     }
 
     interface Element {
         fun appendTo(appendable: Appendable, context: Context)
+        fun indented(indent: String) = this
     }
 
     class TextElement(private val text: String) : Element {
@@ -58,6 +65,18 @@ class Template internal constructor(private val elements: List<Element>) {
             appendable.append(text)
         }
 
+        override fun indented(indent: String) = TextElement(
+                text.split('\n').let { segs ->
+                    segs.mapIndexed { idx, seg ->
+                        if ((idx > 0) && (idx < (segs.size - 1) || !text.endsWith("\n")))
+                            "$indent$seg"
+                        else
+                            seg
+                    }
+                }.joinToString(separator = "\n")
+        )
+
+        fun endsLine() = text.endsWith("\n")
     }
 
     class Variable(private val name: String) : Element {
@@ -76,15 +95,21 @@ class Template internal constructor(private val elements: List<Element>) {
 
     }
 
-    abstract class ElementWithChildren(private val children: List<Element>) : Element {
+    abstract class ElementWithChildren(
+            protected val children: List<Element>,
+            protected val indent: String
+    ) : Element {
 
         fun appendChildren(appendable: Appendable, context: Context) {
-            children.forEach { child -> child.appendTo(appendable, context) }
+            children.forEach { child -> child.indented(indent).appendTo(appendable, context) }
         }
-
     }
 
-    class Section(private val name: String, children: List<Element>) : ElementWithChildren(children) {
+    class Section(
+            private val name: String,
+            children: List<Element>,
+            indent: String = ""
+    ) : ElementWithChildren(children, indent) {
 
         override fun appendTo(appendable: Appendable, context: Context) {
             useValue(context.resolve(name), appendable, context)
@@ -95,7 +120,7 @@ class Template internal constructor(private val elements: List<Element>) {
                 null -> {}
                 is Iterable<*> -> iterate(appendable, context, value.iterator())
                 is Array<*> -> iterate(appendable, context, value.iterator())
-                is Map<*, *> -> iterate(appendable, context, value.entries.iterator())
+                is Map<*, *> -> appendChildren(appendable, context.child(value))
                 is Enum<*> -> appendChildren(appendable, context.enumChild(value))
                 is CharSequence -> {
                     if (value.isNotEmpty())
@@ -143,6 +168,10 @@ class Template internal constructor(private val elements: List<Element>) {
             }
         }
 
+        override fun indented(indent: String) = Section(
+            name, children, indent
+        )
+
         private fun iterate(appendable: Appendable, context: Context, iterator: Iterator<*>) {
             var index = 0
             while (iterator.hasNext()) {
@@ -155,7 +184,11 @@ class Template internal constructor(private val elements: List<Element>) {
 
     }
 
-    class InvertedSection(private val name: String, children: List<Element>) : ElementWithChildren(children) {
+    class InvertedSection(
+            private val name: String,
+            children: List<Element>,
+            indent: String = ""
+    ) : ElementWithChildren(children, indent) {
 
         override fun appendTo(appendable: Appendable, context: Context) {
             context.resolve(name).let {
@@ -207,17 +240,30 @@ class Template internal constructor(private val elements: List<Element>) {
             }
         }
 
+        override fun indented(indent: String) = InvertedSection(
+                name, children, indent
+        )
     }
 
-    class Partial : Element {
-
-        internal lateinit var template: Template
+    class Partial(
+            val getTemplate: () -> Template,
+            val indent: String
+    ) : Element {
 
         override fun appendTo(appendable: Appendable, context: Context) {
-            template.appendTo(appendable, context)
+            getTemplate().indented(indent).appendTo(appendable, context)
         }
 
+        override fun indented(indent: String) = Partial(
+                getTemplate = getTemplate,
+                indent = this.indent + indent
+        )
     }
+
+    fun indented(indent: String) = Template(
+            elements = this.elements,
+            indent = this.indent + indent
+    )
 
     companion object {
 
@@ -232,6 +278,8 @@ class Template internal constructor(private val elements: List<Element>) {
         fun parse(reader: Reader) = parser.parse(reader)
 
         fun parse(string: String) = parser.parse(string)
+
+        fun clearPartials() = parser.clearPartials()
 
     }
 
