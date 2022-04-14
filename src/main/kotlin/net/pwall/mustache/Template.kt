@@ -34,7 +34,9 @@ import java.math.BigInteger
 import net.pwall.html.HTML
 import net.pwall.mustache.parser.Parser
 
-class Template internal constructor(var elements: List<Element>, val indent: String = "") {
+class Template internal constructor(elements: List<Element>, indent: String = "") {
+
+    var elements: List<Element> = elements.indented(indent)
 
     fun processToString(contextObject: Any?): String = StringBuilder().apply {
         processTo(this, contextObject)
@@ -45,18 +47,13 @@ class Template internal constructor(var elements: List<Element>, val indent: Str
     }
 
     fun appendTo(appendable: Appendable, context: Context) {
-        elements.forEachIndexed { idx, element ->
-            val startsLine = (idx == 0) || idx < (elements.size - 1) && elements[idx - 1].let {
-                it is TextElement && it.endsLine()
-            }
-            if (startsLine) appendable.append(indent)
-            element.indented(indent).appendTo(appendable, context)
-        }
+        elements.forEach { it.appendTo(appendable, context) }
     }
 
     interface Element {
         fun appendTo(appendable: Appendable, context: Context)
         fun indented(indent: String) = this
+        fun endsLine() = false
     }
 
     class TextElement(private val text: String) : Element {
@@ -76,7 +73,7 @@ class Template internal constructor(var elements: List<Element>, val indent: Str
                 }.joinToString(separator = "\n")
         )
 
-        fun endsLine() = text.endsWith("\n")
+        override fun endsLine() = text.endsWith("\n")
     }
 
     class Variable(private val name: String) : Element {
@@ -96,12 +93,16 @@ class Template internal constructor(var elements: List<Element>, val indent: Str
     }
 
     abstract class ElementWithChildren(
-            protected val children: List<Element>,
-            protected val indent: String
+            children: List<Element>,
+            indent: String
     ) : Element {
 
+        protected val children = children.indented(indent)
+
+        override fun endsLine() = children.last().endsLine()
+
         fun appendChildren(appendable: Appendable, context: Context) {
-            children.forEach { child -> child.indented(indent).appendTo(appendable, context) }
+            children.forEach { child -> child.appendTo(appendable, context) }
         }
     }
 
@@ -168,9 +169,7 @@ class Template internal constructor(var elements: List<Element>, val indent: Str
             }
         }
 
-        override fun indented(indent: String) = Section(
-            name, children, indent
-        )
+        override fun indented(indent: String) = Section(name, children, indent)
 
         private fun iterate(appendable: Appendable, context: Context, iterator: Iterator<*>) {
             var index = 0
@@ -240,9 +239,7 @@ class Template internal constructor(var elements: List<Element>, val indent: Str
             }
         }
 
-        override fun indented(indent: String) = InvertedSection(
-                name, children, indent
-        )
+        override fun indented(indent: String) = InvertedSection(name, children, indent)
     }
 
     class Partial(
@@ -254,16 +251,10 @@ class Template internal constructor(var elements: List<Element>, val indent: Str
             getTemplate().indented(indent).appendTo(appendable, context)
         }
 
-        override fun indented(indent: String) = Partial(
-                getTemplate = getTemplate,
-                indent = this.indent + indent
-        )
+        override fun indented(indent: String) = Partial(getTemplate, this.indent + indent)
     }
 
-    fun indented(indent: String) = Template(
-            elements = this.elements,
-            indent = this.indent + indent
-    )
+    fun indented(indent: String) = Template(elements.indented(indent))
 
     companion object {
 
@@ -283,4 +274,17 @@ class Template internal constructor(var elements: List<Element>, val indent: Str
 
     }
 
+}
+
+private fun List<Template.Element>.indented(indent: String): List<Template.Element> {
+    return if (indent.isEmpty()) this else
+        fold(mutableListOf()) { acc, elt ->
+            val needIndent = acc.lastOrNull().let {
+                it == null || (it.endsLine() && !(it === last()))
+            } && elt !is Template.ElementWithChildren && elt !is Template.Partial
+            acc.apply {
+                if (needIndent) add(Template.TextElement(indent))
+                add(elt.indented(indent))
+            }
+        }
 }

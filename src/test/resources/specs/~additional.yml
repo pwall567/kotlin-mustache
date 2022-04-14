@@ -7,6 +7,24 @@ tests:
     template: "  {{>node}}"
     partials: { node: "|\n{{content}}\n|\n{{#nodes}}\n  {{>node}}\n{{/nodes}}\n" }
     expected: "  |\n  X\n  |\n    |\n    Y\n    |\n"
+  - name: Partials
+    desc: Indentation in indirect recursion
+    data: { content: "X", nodes: [ { content: "Y", nodes: [] } ] }
+    template: "  {{>node}}"
+    partials:
+      node: "|\n{{content}}\n|\n{{#nodes}}\n  {{>node2}}\n{{/nodes}}\n"
+      node2: "  {{>node}}"
+    expected: "  |\n  X\n  |\n      |\n      Y\n      |\n"
+  - name: Partials
+    desc: Indentation with multiple partial
+    data:
+      content: "X"
+      next: { content: "Y" }
+    template: "  {{>node}}"
+    partials:
+      node: "|\n{{content}}\n|\n  {{>node2}}\n"
+      node2: "|\n{{#next}}{{content}}\n{{/next}}|"
+    expected: "  |\n  X\n  |\n    |\n    Y\n    |"
   - name: Special names
     desc: List values have additional fields
     data:
