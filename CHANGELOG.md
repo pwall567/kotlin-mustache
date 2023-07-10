@@ -2,6 +2,10 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [0.11] - 2023--07-10
+### Changed
+- `pom.xml`: updated to Kotlin 1.7.21
+
 ## [0.10] - 2021-12-17
 ### Changed
 - `Parser`, `Template`: added functions to parse `String`

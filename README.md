@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.com/pwall567/kotlin-mustache.svg?branch=main)](https://travis-ci.com/github/pwall567/kotlin-mustache)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Kotlin](https://img.shields.io/static/v1?label=Kotlin&message=v1.5.20&color=7f52ff&logo=kotlin&logoColor=7f52ff)](https://github.com/JetBrains/kotlin/releases/tag/v1.5.20)
+[![Kotlin](https://img.shields.io/static/v1?label=Kotlin&message=v1.7.21&color=7f52ff&logo=kotlin&logoColor=7f52ff)](https://github.com/JetBrains/kotlin/releases/tag/v1.7.21)
 [![Maven Central](https://img.shields.io/maven-central/v/net.pwall.mustache/kotlin-mustache?label=Maven%20Central)](https://search.maven.org/search?q=g:%22net.pwall.mustache%22%20AND%20a:%22kotlin-mustache%22)
 
 Kotlin implementation of [Mustache](https://mustache.github.io/mustache.5.html) templates.
@@ -183,25 +183,25 @@ For example:
 
 ## Dependency Specification
 
-The latest version of the library is 0.10, and it may be obtained from the Maven Central repository.
+The latest version of the library is 0.11, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>net.pwall.mustache</groupId>
       <artifactId>kotlin-mustache</artifactId>
-      <version>0.10</version>
+      <version>0.11</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'net.pwall.mustache:kotlin-mustache:0.10'
+    implementation 'net.pwall.mustache:kotlin-mustache:0.11'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("net.pwall.mustache:kotlin-mustache:0.10")
+    implementation("net.pwall.mustache:kotlin-mustache:0.11")
 ```
 
 Peter Wall
 
-2021-12-17
+2023-07-10

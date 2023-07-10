@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.pwall.mustache</groupId>
   <artifactId>kotlin-mustache</artifactId>
-  <version>0.10</version>
+  <version>0.11</version>
   <name>Kotlin implementation of Mustache templates</name>
   <packaging>jar</packaging>
   <url>https://github.com/pwall567/kotlin-mustache</url>
@@ -13,7 +13,7 @@
   <parent>
     <groupId>net.pwall.maven</groupId>
     <artifactId>maven-kotlin</artifactId>
-    <version>3.0</version>
+    <version>5.1</version>
   </parent>
 
   <properties>
