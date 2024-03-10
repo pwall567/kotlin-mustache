@@ -157,7 +157,8 @@ context is searched using these same rules (repeatedly up to the outermost conte
 
 The variable or section may be specified in a structured form, e.g. `person.firstName`.
 In this case, the above rules are used for the first part of the name (the part before the first dot), but for the
-subsequent parts only the result of the first part is searched and the enclosing contexts do form part of the process.
+subsequent parts only the result of the first part is searched and the enclosing contexts do not form part of the
+resolution process.
 
 ### Whitespace
 
