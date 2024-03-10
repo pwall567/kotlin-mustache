@@ -114,11 +114,11 @@ class Template internal constructor(private val elements: List<Element>) {
                         appendChildren(appendable, context.child(value))
                 }
                 is Short -> {
-                    if (value != 0)
+                    if (value.toInt() != 0)
                         appendChildren(appendable, context.child(value))
                 }
                 is Byte -> {
-                    if (value != 0)
+                    if (value.toInt() != 0)
                         appendChildren(appendable, context.child(value))
                 }
                 is Double -> {
@@ -192,15 +192,15 @@ class Template internal constructor(private val elements: List<Element>) {
                             appendChildren(appendable, context)
                     }
                     is Long -> {
-                        if (it == 0)
+                        if (it == 0L)
                             appendChildren(appendable, context)
                     }
                     is Short -> {
-                        if (it == 0)
+                        if (it.toInt() == 0)
                             appendChildren(appendable, context)
                     }
                     is Byte -> {
-                        if (it == 0)
+                        if (it.toInt() == 0)
                             appendChildren(appendable, context)
                     }
                 }

@@ -98,7 +98,7 @@ processed if the value is non-zero
 - anything else: the content of the section is processed if the value is not `null`, with the value used as the context
 object for the nested content (this is how properties of nested objects may be accessed)
 
-When processing an `Iterable`, additional names are available in the context for each item processed:
+When processing an `Iterable` or `Map`, additional names are available in the context for each item processed:
 - `first` (`Boolean`) &ndash; `true` if the item is the first in the collection
 - `last` (`Boolean`) &ndash; `true` if the item is the last in the collection
 - `index` (`Int`) &ndash; the index (zero-based) of the item in the collection
@@ -183,25 +183,25 @@ For example:
 
 ## Dependency Specification
 
-The latest version of the library is 0.11, and it may be obtained from the Maven Central repository.
+The latest version of the library is 0.12, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>net.pwall.mustache</groupId>
       <artifactId>kotlin-mustache</artifactId>
-      <version>0.11</version>
+      <version>0.12</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'net.pwall.mustache:kotlin-mustache:0.11'
+    implementation 'net.pwall.mustache:kotlin-mustache:0.12'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("net.pwall.mustache:kotlin-mustache:0.11")
+    implementation("net.pwall.mustache:kotlin-mustache:0.12")
 ```
 
 Peter Wall
 
-2023-07-10
+2024-03-11

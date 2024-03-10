@@ -2,7 +2,13 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
-## [0.11] - 2023--07-10
+## [0.12] - 2024-03-11
+### Changed
+- `Template`: fixed compiler warnings
+- `Context`: fixed bug in accessing `List`s
+- `pom.xml`: updated to Kotlin 1.8.22
+
+## [0.11] - 2023-07-10
 ### Changed
 - `pom.xml`: updated to Kotlin 1.7.21
 

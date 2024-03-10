@@ -2,7 +2,7 @@
  * @(#) Context.kt
  *
  * kotlin-mustache  Kotlin implementation of Mustache templates
- * Copyright (c) 2020 Peter Wall
+ * Copyright (c) 2020, 2024 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,8 @@
 
 package net.pwall.mustache
 
-import kotlin.reflect.full.memberExtensionProperties
+import kotlin.reflect.KCallable
+import kotlin.reflect.KVisibility
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.staticFunctions
 import kotlin.reflect.full.staticProperties
@@ -63,11 +64,22 @@ open class Context private constructor(private val contextObject: Any?, private 
                 if (sourceObject.containsKey(name))
                     return sourceObject[name]
             }
+            is Collection<*> -> {
+                if (name == "size")
+                    return sourceObject.size
+                if (sourceObject is List<*>) {
+                    try {
+                        val index = name.toInt()
+                        if (index in sourceObject.indices)
+                            return sourceObject[index]
+                    }
+                    catch (_: NumberFormatException) {}
+                }
+            }
             else -> {
                 val kClass = sourceObject::class
-                kClass.memberProperties.find { it.name == name }?.let { return it.call(sourceObject) }
-                kClass.memberExtensionProperties.find { it.name == name }?.let { return it.call(sourceObject) }
-                kClass.staticProperties.find { it.name == name }?.let { return it.call() }
+                kClass.memberProperties.find { it.isPublic() && it.name == name }?.let { return it.call(sourceObject) }
+                kClass.staticProperties.find { it.isPublic() && it.name == name }?.let { return it.call() }
             }
         }
         return fallback()
@@ -76,7 +88,7 @@ open class Context private constructor(private val contextObject: Any?, private 
     fun child(contextObject: Any?) = Context(contextObject, this)
 
     fun iteratorChild(contextObject: Any?, first: Boolean, last: Boolean, index: Int, index1: Int) =
-            object : Context(contextObject, this) {
+            object : Context(contextObject, this@Context) {
         override fun resolve(name: String): Any? {
             return when (name) {
                 "first" -> first
@@ -89,7 +101,7 @@ open class Context private constructor(private val contextObject: Any?, private 
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun enumChild(contextObject: Enum<*>) = object : Context(contextObject, this) {
+    fun enumChild(contextObject: Enum<*>) = object : Context(contextObject, this@Context) {
         val values = (contextObject::class.staticFunctions.find { it.name == "values" }?.call() as? Array<Enum<*>>?)?.
                 map { it.name }
         override fun resolve(name: String): Any? {
@@ -99,6 +111,10 @@ open class Context private constructor(private val contextObject: Any?, private 
                 return false
             return super.resolve(name)
         }
+    }
+
+    companion object {
+        fun KCallable<*>.isPublic(): Boolean = visibility == KVisibility.PUBLIC
     }
 
 }
